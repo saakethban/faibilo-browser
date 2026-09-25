@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Faibilo Desktop Search</title>
+    <link rel="stylesheet" href="./widget.css" />
+  </head>
+  <body>
+    <form id="widgetSearch">
+      <button class="logo-button" id="widgetLogo" type="button" aria-label="Toggle widget">
+        <img src="./assets/Faibilo-logo.png" alt="" draggable="false" />
+      </button>
+      <div class="search-shell">
+        <input id="widgetInput" autocomplete="off" spellcheck="false" placeholder="Search with Faibilo" autofocus />
+      </div>
+      <button type="button" id="widgetApps" aria-label="Show apps" aria-expanded="false"></button>
+      <button type="submit" id="widgetSubmit">Search</button>
+      <button type="button" id="widgetClose" aria-label="Hide widget">x</button>
+
+      <div id="widgetAppsMenu" class="apps-menu hidden" aria-hidden="true">
+        <div id="widgetAppsList" class="apps-list"></div>
+      </div>
+
+      <span class="resize-grip" aria-hidden=>
+    </form>
+    <script>
+      const input = document.querySelector('#widgetInput');
+      const logo = document.querySelector('#widgetLogo');
+      const appsButton = document.querySelector('#widgetApps');
+      const appsMenu = document.querySelector('#widgetAppsMenu');
+      const appsList = document.querySelector('#widgetAppsList');
+
+      // NOTE: the current widget HTML intentionally keeps the UI minimal.
+      // If you need the apps menu list container, ensure it exists in this document.
+      if (!appsMenu) {
+        console.warn('[Faibilo widget] Missing #widgetAppsMenu element.');
+      }
+      if (!appsList) {
+        console.warn('[Faibilo widget] Missing #widgetAppsList element.');
+      }
+
+      const collapseDelay = 5000;
+      const favoritesKey = 'faibilo.favorites';
+      const defaultApps = [
+        { id: 'youtube', name: 'YouTube', url: 'https://www.youtube.com' },
+        { id: 'discord', name: 'Discord', url: 'https://discord.com/app' },
+        { id: 'whatsapp', name: 'WhatsApp', url: 'https://web.whatsapp.com' },
+        { id: 'spotify', name: 'Spotify', url: 'https://open.spotify.com' },
+        { id: 'chatgpt', name: 'ChatGPT', url: 'https://chatgpt.com' },
+        { id: 'github', name: 'GitHub', url: 'https://github.com' },
+        { id: 'gmail', name: 'Gmail', url: 'https://mail.google.com' },
+        { id: 'reddit', name: 'Reddit', url: 'https://www.reddit.com' }
+      ];
+      let collapsed = false;
+      let collapseTimer = null;
+      let logoDrag = null;
+      let appsOpen = false;
+      let dragging = false;
+
+      function favoriteIconUrl(url) {
+        try {
+          return `${new URL(url).origin}/favicon.ico`;
+        } catch {
+          return '';
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        })[char]);
+      }
+
+      function readApps() {
+        try {
+          const storedApps = JSON.parse(localStorage.getItem(favoritesKey));
+          if (Array.isArray(storedApps) && storedApps.length) return storedApps;
+        } catch {}
+        return defaultApps;
+      }
+
+      function renderApps() {
+        const apps = readApps().filter((app) => app?.name && app?.url?.startsWith('http'));
+        appsList.innerHTML = '';
+        apps.forEach((app) => {
+          const row = document.createElement('button');
+          row.type = 'button';
+          row.className = 'app-row';
+          row.innerHTML = `
+            <span class="app-icon"><img src="${favoriteIconUrl(app.url)}" alt=""></span>
+          `;
+          row.title = app.name;
+          row.setAttribute('aria-label', `Open ${app.name}`);
+          row.querySelector('img').addEventListener('error', (event) => {
+            event.currentTarget.replaceWith(document.createTextNode((app.name || 'F').trim().charAt(0).toUpperCase()));
+          }, { once: true });
+          row.addEventListener('click', () => {
+            setAppsOpen(false);
+            window.faibilo.searchFromWidget(app.url);
+          });
+          appsList.appendChild(row);
+        });
+      }
+
+      function setAppsOpen(open) {
+        appsOpen = Boolean(open && !collapsed);
+        if (appsOpen) renderApps();
+        appsMenu.classList.toggle('hidden', !appsOpen);
+        appsButton.setAttribute('aria-expanded', String(appsOpen));
+        window.faibilo.setWidgetAppsOpen(appsOpen);
+        scheduleAutoCollapse();
+      }
+
+      function setCollapsedState(nextCollapsed) {
+        if (dragging) return;
+        document.body.classList.remove('closing-to-logo', 'opening-from-logo');
+        if (collapsed && !nextCollapsed) {
+          document.body.classList.add('opening-from-logo');
+          setTimeout(() => document.body.classList.remove('opening-from-logo'), 260);
+        }
+        collapsed = Boolean(nextCollapsed);
+        document.body.classList.toggle('collapsed', collapsed);
+        if (collapsed) setAppsOpen(false);
+        scheduleAutoCollapse();
+        if (!collapsed) {
+          requestAnimationFrame(() => input.focus());
+        }
+      }
+
+      function scheduleAutoCollapse() {
+        clearTimeout(collapseTimer);
+        if (dragging) return;
+        if (collapsed) return;
+        collapseTimer = setTimeout(() => {
+          window.faibilo.setWidgetCollapsed(true);
+        }, collapseDelay);
+      }
+
+      function markActivity() {
+        scheduleAutoCollapse();
+      }
+
+      function collapseToLogo() {
+        if (dragging) return;
+        document.body.classList.add('closing-to-logo');
+        setAppsOpen(false);
+        clearTimeout(collapseTimer);
+        setTimeout(() => window.faibilo.setWidgetCollapsed(true), 170);
+      }
+
+      document.querySelector('#widgetSearch').addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (collapsed) {
+          window.faibilo.setWidgetCollapsed(false);
+          return;
+        }
+        window.faibilo.searchFromWidget(input.value);
+      });
+      appsButton.addEventListener('click', () => {
+        if (collapsed) {
+          window.faibilo.setWidgetCollapsed(false);
+          return;
+        }
+        setAppsOpen(!appsOpen);
+      });
+      logo.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        dragging = true;
+        // ensure widget stays in compact state during drag (prevents size/background animation)
+        window.faibilo.setWidgetAppsOpen?.(false);
+
+        logo.setPointerCapture(event.pointerId);
+        logoDrag = {
+          pointerId: event.pointerId,
+          moved: false,
+          lastX: event.screenX,
+          lastY: event.screenY
+        };
+        event.preventDefault();
+      });
+      logo.addEventListener('pointermove', (event) => {
+        if (!logoDrag || logoDrag.pointerId !== event.pointerId) return;
+        const deltaX = event.screenX - logoDrag.lastX;
+        const deltaY = event.screenY - logoDrag.lastY;
+        if (Math.abs(deltaX) + Math.abs(deltaY) > 0) {
+          logoDrag.moved = true;
+          window.faibilo.moveWidgetBy(deltaX, deltaY);
+          logoDrag.lastX = event.screenX;
+          logoDrag.lastY = event.screenY;
+        }
+        event.preventDefault();
+      });
+      logo.addEventListener('pointerup', (event) => {
+        if (!logoDrag || logoDrag.pointerId !== event.pointerId) return;
+        const wasMoved = logoDrag.moved;
+        logoDrag = null;
+        dragging = false;
+        if (!wasMoved) window.faibilo.setWidgetCollapsed(!collapsed);
+        else scheduleAutoCollapse();
+        event.preventDefault();
+      });
+      logo.addEventListener('pointercancel', () => {
+        logoDrag = null;
+        dragging = false;
+      });
+      document.querySelector('#widgetClose').addEventListener('click', collapseToLogo);
+      window.faibilo.onWidgetState((state) => setCollapsedState(state.collapsed));
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && appsOpen) setAppsOpen(false);
+        if (event.key === 'F12') window.faibilo.toggleDevTools();
+      });
+      window.addEventListener('pointerdown', (event) => {
+        if (!appsOpen || appsMenu.contains(event.target) || appsButton.contains(event.target)) return;
+        setAppsOpen(false);
+      });
+      ['pointermove', 'keydown', 'input', 'focusin'].forEach((eventName) => {
+        window.addEventListener(eventName, markActivity);
+      });
+      renderApps();
+      scheduleAutoCollapse();
+    </script>
+  </body>
+</html>

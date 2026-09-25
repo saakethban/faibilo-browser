@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Faibilo</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="ambient-glow" id="ambientGlow"></div>
+      <header class="chrome">
+        <div class="titlebar">
+          <div class="brand">
+            <span class="brand-mark"><img src="./assets/Faibilo-logo.png" alt=""></span>
+            <span>Faibilo</span>
+          </div>
+          <div class="tabs" id="tabs"></div>
+          <div class="tab-actions">
+            <button class="tabs-overflow icon-button hidden" id="tabsOverflow" title="Hidden tabs" aria-label="Hidden tabs" data-icon="chevron-down"></button>
+            <button class="new-tab icon-button" id="newTab" title="New tab" aria-label="New tab" data-icon="plus"></button>
+          </div>
+          <div class="window-actions">
+            <button class="icon-button" id="minimize" aria-label="Minimize" data-icon="minus"></button>
+            <button class="icon-button" id="maximize" aria-label="Maximize" data-icon="square"></button>
+            <button class="icon-button" id="close" aria-label="Close" data-icon="x"></button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="nav-buttons">
+            <button class="icon-button" id="back" title="Back" aria-label="Back" data-icon="arrow-left"></button>
+            <button class="icon-button" id="forward" title="Forward" aria-label="Forward" data-icon="arrow-right"></button>
+            <button class="icon-button" id="reload" title="Reload" aria-label="Reload" data-icon="rotate-cw"></button>
+            <button class="icon-button" id="home" title="Home" aria-label="Home" data-icon="home"></button>
+          </div>
+          <form class="omnibox" id="omniboxForm">
+            <span class="security icon-slot" id="security" data-icon="search"></span>
+            <input id="address" autocomplete="off" spellcheck="false" placeholder="Search or enter address" />
+            <button class="icon-button" id="go" title="Go" aria-label="Go" data-icon="corner-down-left"></button>
+            <div class="search-suggestions" id="omniboxSuggestions"></div>
+          </form>
+          <button class="media-disc hidden" id="mediaDisc" type="button" title="Playing media">
+            <span class="media-disc-thumb" id="mediaDiscThumb"></span>
+          </button>
+          <div class="tool-buttons">
+            <button class="icon-button" id="bookmark" title="Bookmark" aria-label="Bookmark" data-icon="star"></button>
+            <button class="icon-button" id="find" title="Find" aria-label="Find" data-icon="search"></button>
+            <button class="icon-button" id="settingsButton" title="Settings" aria-label="Settings" data-icon="settings"></button>
+            <button class="icon-button" id="menuButton" title="Menu" aria-label="Menu" data-icon="more-vertical"></button>
+            <button class="icon-button" id="sidePanelToggle" title="Apps" aria-label="Apps" data-icon="panel-right"></button>
+          </div>
+        </div>
+
+        <div class="findbar hidden" id="findbar">
+          <input id="findText" placeholder="Find in page" />
+          <button class="icon-button" id="findPrev" title="Previous" data-icon="chevron-up"></button>
+          <button class="icon-button" id="findNext" title="Next" data-icon="chevron-down"></button>
+          <button class="icon-button" id="findClose" title="Close" data-icon="x"></button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <div class="side-panel-trigger" id="sidePanelTrigger" title="Hover to show apps"></div>
+        <aside class="side-panel" id="sidePanel">
+          <div class="side-panel-header">
+            <div class="side-panel-badge" title="Faibilo Quick Apps">
+              <span class="side-panel-dot"></span>
+              <span class="side-panel-label">APPS</span>
+            </div>
+          </div>
+          <div class="apps-dock">
+            <div id="favoritesList" class="favorite-apps"></div>
+            <button class="favorite-launch add-app-tile" id="addFavoriteButton" title="Add app to sidebar" aria-label="Add app to sidebar">
+              <span class="favorite-icon icon-slot" data-icon="plus"></span>
+            </button>
+          </div>
+          <div class="side-panel-footer">
+            <button class="side-dock-dismiss-btn icon-button hidden" id="closeSideWebPanelButton" title="Close sided app" aria-label="Close sided app" data-icon="x-circle"></button>
+          </div>
+        </aside>
+        <div class="side-web-panel hidden" id="sideWebPanel">
+          <div class="side-web-panel-resize-handle" id="sideWebPanelResizeHandle">
+            <span class="resize-handle-grip"></span>
+          </div>
+          <div class="side-web-panel-header">
+            <div class="side-web-panel-title-wrap">
+              <span class="side-web-panel-dot"></span>
+              <span class="side-web-panel-title" id="sideWebPanelTitle">Sided Page</span>
+            </div>
+            <div class="side-web-panel-actions">
+              <button class="icon-button" id="sideWebPanelOpenTab" title="Open in full tab" data-icon="external-link"></button>
+              <button class="icon-button" id="sideWebPanelReload" title="Reload app" data-icon="rotate-cw"></button>
+              <button class="icon-button" id="sideWebPanelClose" title="Close panel" data-icon="x"></button>
+            </div>
+          </div>
+          <div class="side-web-panel-body" id="sideWebPanelBody"></div>
+        </div>
+        <section class="browser-area" id="browserArea">
+          <div class="empty-tabs-view hidden" id="emptyTabsView">
+            <div class="empty-tabs-card">
+              <div class="empty-tabs-glow"></div>
+              <div class="empty-tabs-icon-wrap">
+                <img src="./assets/Faibilo-logo.png" alt="Faibilo" class="empty-tabs-logo" />
+                <div class="empty-tabs-pulse"></div>
+              </div>
+              <h2 class="empty-tabs-title">Open a new tab to get started</h2>
+              <p class="empty-tabs-desc">All tabs are closed. Search the web, explore your favorite sites, or jump into productivity apps with instant speed.</p>
+              <div class="empty-tabs-actions">
+                <button type="button" class="empty-tabs-btn primary" id="emptyTabsNewTabBtn">
+                  <span class="icon-slot" data-icon="plus"></span>
+                  <span>Open New Tab</span>
+                  <kbd class="shortcut-pill">Ctrl + T</kbd>
+                </button>
+                <button type="button" class="empty-tabs-btn secondary" id="emptyTabsSettingsBtn">
+                  <span class="icon-slot" data-icon="settings"></span>
+                  <span>Settings</span>
+                </button>
+                <button type="button" class="empty-tabs-btn secondary" id="emptyTabsTourBtn" onclick="window.startTour &amp;&amp; window.startTour(0)">
+                  <span class="icon-slot" data-icon="compass"></span>
+                  <span>Quick Tour</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <section class="settings-page hidden" id="settingsPage">
+            <aside class="settings-nav" aria-label="Settings sections">
+              <div class="settings-brand">
+                <span class="brand-mark"><img src="./assets/Faibilo-logo.png" alt=""></span>
+                <div>
+                  <strong>Settings</strong>
+                  <small>Faibilo control center</small>
+                </div>
+              </div>
+              <button class="settings-nav-item active" data-settings-section="browsing" type="button">
+                <span class="icon-slot" data-icon="search"></span>
+                <span>Browsing</span>
+              </button>
+              <button class="settings-nav-item" data-settings-section="appearance" type="button">
+                <span class="icon-slot" data-icon="star"></span>
+                <span>Appearance</span>
+              </button>
+              <button class="settings-nav-item" data-settings-section="shields" type="button">
+                <span class="icon-slot" data-icon="shield-check"></span>
+                <span>Shields & Ad Block</span>
+              </button>
+              <button class="settings-nav-item" data-settings-section="downloads" type="button">
+                <span class="icon-slot" data-icon="corner-down-left"></span>
+                <span>Downloads</span>
+              </button>
+              <button class="settings-nav-item" data-settings-section="privacy" type="button">
+                <span class="icon-slot" data-icon="shield-alert"></span>
+                <span>Speed & Privacy</span>
+              </button>
+              <button class="settings-nav-item" data-settings-section="permissions" type="button">
+                <span class="icon-slot" data-icon="lock"></span>
+                <span>Permissions</span>
+              </button>
+
+              <button class="settings-nav-item" data-settings-section="history" type="button">
+                <span class="icon-slot" data-icon="rotate-cw"></span>
+                <span>History</span>
+              </button>
+              <button class="settings-nav-item" data-settings-section="playing" type="button">
+                <span class="icon-slot" data-icon="rotate-cw"></span>
+                <span>Playing</span>
+              </button>
+
+              <button class="settings-nav-item" data-settings-section="data" type="button">
+                <span class="icon-slot" data-icon="settings"></span>
+                <span>Data</span>
+              </button>
+              <button class="settings-nav-item" data-settings-section="about" type="button">
+                <span class="icon-slot" data-icon="globe"></span>
+                <span>About</span>
+              </button>
+
+            </aside>
+
+            <div class="settings-content">
+              <div class="settings-head">
+                <div>
+                  <h2 id="settingsTitle">Browsing</h2>
+                  <p id="settingsSubtitle">Search, tabs, start page, and sidebar behavior.</p>
+                </div>
+                <button class="icon-button" id="settingsClose" title="Close" data-icon="x"></button>
+              </div>
+
+              <section class="settings-section active" data-settings-page="browsing">
+                <article class="settings-card">
+                  <h3>Search & Tabs</h3>
+                  <label>
+                    Search engine
+                    <select id="searchEngine">
+                      <option value="google">Google</option>
+                      <option value="duckduckgo">DuckDuckGo</option>
+                      <option value="bing">Bing</option>
+                    </select>
+                  </label>
+                  <label>
+                    New tab opens
+                    <select id="homeMode">
+                      <option value="start">Faibilo Start</option>
+                      <option value="blank">Blank page</option>
+                      <option value="custom">Custom page</option>
+                    </select>
+                  </label>
+                  <label>
+                    Custom start page
+                    <input id="customHome" placeholder="https://example.com" />
+                  </label>
+                  <label class="toggle-row">
+                    <span>Open bookmarks in new tabs</span>
+                    <input id="bookmarksNewTab" type="checkbox" />
+                  </label>
+                  <label class="toggle-row">
+                    <span>Show app sidebar</span>
+                    <input id="showSidebar" type="checkbox" />
+                  </label>
+                  <div class="settings-action-row" style="margin-top: 12px;">
+                    <button class="secondary-button btn-compact" id="settingsRestoreDefaultAppsBtn" type="button">
+                      <span class="icon-slot" data-icon="rotate-cw"></span>
+                      <span>Restore Default Sidebar Apps</span>
+                    </button>
+                  </div>
+                </article>
+
+                <article class="settings-card" id="defaultBrowserCard">
+                  <h3>Default Browser</h3>
+                  <div class="default-browser-card-body">
+                    <div class="default-browser-info">
+                      <div class="default-browser-heading-row">
+                        <span class="default-browser-badge" id="defaultBrowserBadge">Checking...</span>
+                        <strong class="default-browser-title">Windows Default App</strong>
+                      </div>
+                      <p id="defaultBrowserStatus" class="default-browser-status-text">Checking whether Faibilo is your default browser...</p>
+                    </div>
+                    <button class="primary-button" id="setDefaultBrowserBtn" type="button">Set as default</button>
+                  </div>
+                </article>
+
+                <article class="settings-card tour-showcase-card" id="tourSettingsCard">
+                  <div class="tour-showcase-glow" aria-hidden="true"></div>
+                  <div class="tour-showcase-header">
+                    <div class="tour-badge-pill">
+                      <svg class="tour-sparkle" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/>
+                      </svg>
+                      <span>Interactive Onboarding</span>
+                    </div>
+                    <span class="tour-version-chip">v0.1.0 Tour</span>
+                  </div>
+
+                  <div class="tour-showcase-content">
+                    <h3 class="tour-showcase-title">Discover Faibilo Superpowers</h3>
+                    <p class="tour-showcase-desc">
+                      Take a quick 60-second interactive tour to master the desktop Music Disc, unlock right-click shortcuts, try live theme previews, and explore RAM-saving tab sleep.
+                    </p>
+                  </div>
+
+                  <div class="tour-feature-pills">
+                    <span class="tour-pill"><span class="pill-icon">♬</span> Music Disc &amp; Search</span>
+                    <span class="tour-pill"><span class="pill-icon">⚡</span> 0ms Instant Tabs</span>
+                    <span class="tour-pill"><span class="pill-icon">🎨</span> Live Theme Switcher</span>
+                    <span class="tour-pill"><span class="pill-icon">🛡️</span> Ephemeral Incognito</span>
+                  </div>
+
+                  <div class="tour-btn-wrap">
+                    <button class="tour-hero-btn" id="startTourBtn" type="button" onclick="window.startTour &amp;&amp; window.startTour(0)">
+                      <div class="tour-btn-glow" aria-hidden="true"></div>
+                      <span class="tour-btn-icon-wrap">
+                        <svg class="compass-anim" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                        </svg>
+                      </span>
+                      <span class="tour-btn-label">Start Interactive Tour</span>
+                      <svg class="arrow-anim" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                      </svg>
+                    </button>
+                    <span class="tour-duration-hint">⏱ ~1 minute • Replayable anytime</span>
+                  </div>
+                </article>
+              </section>
+
+              <section class="settings-section" data-settings-page="appearance">
+                <article class="settings-card">
+                  <h3>Customize Browser</h3>
+                  <label>
+                    Theme
+                    <select id="themePreset">
+                      <option value="forest">Forest</option>
+                      <option value="midnight">Midnight</option>
+                      <option value="carbon">Carbon</option>
+                      <option value="sunrise">Sunrise</option>
+                    </select>
+                  </label>
+                  <label>
+                    Accent color
+                    <input id="accentColor" type="color" />
+                  </label>
+                  <label>
+                    UI background color
+                    <input id="componentBgColor" type="color" />
+                  </label>
+                  <label>
+                    Border color
+                    <input id="borderColor" type="color" />
+                  </label>
+                  <label class="toggle-row">
+                    <span>Ambient video glow</span>
+                    <input id="ambientVideoGlow" type="checkbox" />
+                  </label>
+                  <label class="toggle-row">
+                    <span>Auto color from webpage</span>
+                    <input id="autoPageTheme" type="checkbox" />
+                  </label>
+                  <div class="theme-preview">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <div class="preset-actions">
+                    <button id="exportAppearancePreset" type="button">Export preset</button>
+                    <button id="importAppearancePreset" type="button">Import preset</button>
+                    <button id="resetAppearance" type="button">Reset colors</button>
+                    <input id="appearancePresetFile" class="hidden" type="file" accept="application/json,.json" />
+                  </div>
+                </article>
+              </section>
+
+              <section class="settings-section" data-settings-page="downloads">
+                <article class="settings-card">
+                  <h3>Downloads</h3>
+                  <label>
+                    Download location
+                    <div class="folder-row">
+                      <input id="downloadPath" readonly />
+                      <button id="chooseDownloadPath">Choose</button>
+                    </div>
+                  </label>
+                  <label class="toggle-row">
+                    <span>Ask where to save each file</span>
+                    <input id="askDownloadLocation" type="checkbox" />
+                  </label>
+                </article>
+                <article class="settings-card">
+                  <h3>Recent Downloads</h3>
+                  <div id="downloadsList" class="panel-list empty-list"></div>
+                </article>
+              </section>
+
+              <section class="settings-section" data-settings-page="shields">
+                <!-- Shields Hero & Stats Card -->
+                <article class="settings-card shields-hero-card">
+                  <div class="shields-hero-head">
+                    <div class="shields-hero-brand">
+                      <div class="shields-icon-glow">
+                        <span class="icon-slot" data-icon="shield-check"></span>
+                      </div>
+                      <div>
+                        <h3 class="shields-hero-title">Faibilo Shields Engine</h3>
+                        <p class="shields-hero-sub">Proactive protection against ads, popups, deceptive redirects, and telemetry trackers.</p>
+                      </div>
+                    </div>
+                    <span class="shields-status-badge active" id="shieldsStatusBadge">
+                      <span class="pulse-dot"></span>
+                      Active Protection
+                    </span>
+                  </div>
+
+                  <div class="shields-stats-grid">
+                    <div class="shield-stat-tile">
+                      <span class="shield-stat-num" id="statBlockedCount">0</span>
+                      <span class="shield-stat-lbl">Ads & Popups Blocked</span>
+                    </div>
+                    <div class="shield-stat-tile">
+                      <span class="shield-stat-num" id="statTrackerCount">Protected</span>
+                      <span class="shield-stat-lbl">Anti-Tracking Shield</span>
+                    </div>
+                    <div class="shield-stat-tile">
+                      <span class="shield-stat-num" id="statVideoAdCount">Active</span>
+                      <span class="shield-stat-lbl">Video Ad Auto-Skipper</span>
+                    </div>
+                  </div>
+
+                  <div class="shields-hero-actions">
+                    <button id="resetShieldStats" type="button" class="shield-ghost-button">Reset blocked stats</button>
+                  </div>
+                </article>
+
+                <!-- Core Protection Toggles -->
+                <article class="settings-card">
+                  <h3>Protection Controls</h3>
+                  <label class="toggle-row">
+                    <div>
+                      <span>Block Advertisements</span>
+                      <small style="display:block; color:var(--muted); font-size:12px;">Stops banner ads, video overlays, and sponsored marketing units across all sites.</small>
+                    </div>
+                    <input id="blockAds" type="checkbox" />
+                  </label>
+
+                  <label class="toggle-row">
+                    <div>
+                      <span>Block Popups & Popunders</span>
+                      <small style="display:block; color:var(--muted); font-size:12px;">Prevents deceptive new windows, click-jacking traps, and redirect loops.</small>
+                    </div>
+                    <input id="blockPopups" type="checkbox" />
+                  </label>
+
+                  <label class="toggle-row">
+                    <div>
+                      <span>Block Trackers & Telemetry</span>
+                      <small style="display:block; color:var(--muted); font-size:12px;">Blocks analytics beacons, device fingerprinting, and third-party tracking scripts.</small>
+                    </div>
+                    <input id="blockTrackers" type="checkbox" />
+                  </label>
+
+                  <label class="toggle-row">
+                    <div>
+                      <span>Auto-Skip Video Ads</span>
+                      <small style="display:block; color:var(--muted); font-size:12px;">Instantly fast-forwards and clicks skip on YouTube and HTML5 video players.</small>
+                    </div>
+                    <input id="autoSkipVideoAds" type="checkbox" />
+                  </label>
+
+                  <label class="toggle-row">
+                    <div>
+                      <span>Cosmetic Element Hiding</span>
+                      <small style="display:block; color:var(--muted); font-size:12px;">Collapses empty ad frames and cleans up whitespace left by blocked banners.</small>
+                    </div>
+                    <input id="cosmeticFiltering" type="checkbox" />
+                  </label>
+                </article>
+
+                <!-- Customizations: Whitelist & Custom Rules -->
+                <article class="settings-card">
+                  <h3>Shield Customizations</h3>
+                  
+                  <!-- Whitelist -->
+                  <div class="shield-custom-group">
+                    <div class="shield-group-head">
+                      <strong>Whitelisted Websites</strong>
+                      <small style="display:block; color:var(--muted); font-size:12px;">Shields will be paused on these trusted domains.</small>
+                    </div>
+                    <div class="shield-input-row">
+                      <input id="whitelistInput" type="text" placeholder="e.g. example.com or news.site" />
+                      <button id="addWhitelistBtn" type="button">Allow Site</button>
+                    </div>
+                    <div id="whitelistChips" class="shield-chips-list"></div>
+                  </div>
+
+                  <div class="shield-divider"></div>
+
+                  <!-- Custom Rules -->
+                  <div class="shield-custom-group">
+                    <div class="shield-group-head">
+                      <strong>Custom Block Rules</strong>
+                      <small style="display:block; color:var(--muted); font-size:12px;">Block specific domains, keywords, or URL query parameters.</small>
+                    </div>
+                    <div class="shield-input-row">
+                      <input id="customBlockInput" type="text" placeholder="e.g. popnetwork.com or bad-ad-tracker" />
+                      <button id="addCustomBlockBtn" type="button">Block Rule</button>
+                    </div>
+                    <div id="customBlockChips" class="shield-chips-list"></div>
+                  </div>
+                </article>
+              </section>
+
+              <section class="settings-section" data-settings-page="privacy">
+                <article class="settings-card">
+                  <h3>Performance & Memory Saver</h3>
+                  <label class="toggle-row">
+                    <div>
+                      <span>Sleeping tabs (Memory Saver)</span>
+                      <small style="display:block; color:var(--muted); font-size:12px;">Puts inactive background tabs to sleep after a period of inactivity to free CPU and memory. Instantly wakes up when clicked.</small>
+                    </div>
+                    <input id="sleepingTabs" type="checkbox" />
+                  </label>
+                  <label id="sleepingTabsTimeoutRow">
+                    Put inactive tabs to sleep after
+                    <select id="sleepingTabsTimeout">
+                      <option value="5">5 minutes</option>
+                      <option value="15" selected>15 minutes (recommended)</option>
+                      <option value="30">30 minutes</option>
+                      <option value="60">1 hour</option>
+                    </select>
+                  </label>
+                  <label class="toggle-row">
+                    <div>
+                      <span>UI Efficiency Mode</span>
+                      <small style="display:block; color:var(--muted); font-size:12px;">Reduces heavy background blur filters and complex shadows in the browser shell to maximize responsiveness on integrated GPUs.</small>
+                    </div>
+                    <input id="efficiencyMode" type="checkbox" />
+                  </label>
+                  <div class="memory-trim-row">
+                    <div>
+                      <strong style="font-size:13px; color:var(--text);">Working Set Cache</strong>
+                      <p id="memoryTrimStatus" style="margin:2px 0 0 0; font-size:12px; color:var(--muted);">Release unused RAM and cached data immediately.</p>
+                    </div>
+                    <button class="primary-button btn-compact" id="trimMemoryBtn" type="button">Free up memory</button>
+                  </div>
+                </article>
+
+                <article class="settings-card">
+                  <h3>Speed & Privacy</h3>
+                  <label class="toggle-row">
+                    <div>
+                      <span>Fast mode</span>
+                      <small style="display:block; color:var(--muted); font-size:12px;">Pre-compiles V8 scripts, prioritizes foreground tabs, and enables aggressive background throttling.</small>
+                    </div>
+                    <input id="fastMode" type="checkbox" />
+                  </label>
+                  <label class="toggle-row">
+                    <div>
+                      <span>Predictive hover loading (Instant page prefetch)</span>
+                      <small style="display:block; color:var(--muted); font-size:12px;">Predicts and preconnects to destinations when hovering over buttons, bookmarks, and links for near-instant navigation.</small>
+                    </div>
+                    <input id="predictivePreload" type="checkbox" />
+                  </label>
+                  <label class="toggle-row">
+                    <div>
+                      <span>Save browsing history</span>
+                      <small style="display:block; color:var(--muted); font-size:12px;">Stores visited websites locally for search and quick access.</small>
+                    </div>
+                    <input id="saveHistory" type="checkbox" />
+                  </label>
+
+                  <div class="shield-redirect-card">
+                    <span class="icon-slot" data-icon="shield-check"></span>
+                    <div>
+                      <strong>Ad & Popup Blocker has its own section</strong>
+                      <p>Full customization, popup shields, auto video skipper, and whitelisting are now in <button type="button" id="goToShieldsBtn" class="inline-link-btn">Shields & Ad Block</button>.</p>
+                    </div>
+                  </div>
+                </article>
+              </section>
+
+              <section class="settings-section" data-settings-page="permissions">
+                <article class="settings-card permissions-card">
+                  <h3>Site Permissions</h3>
+                  <p>Manage sites that Faibilo remembers for camera, microphone, location, notifications, push messages, and other access.</p>
+                  <div id="permissionsList" class="panel-list empty-list"></div>
+                  <button id="clearPermissions" type="button">Clear all site permissions</button>
+                </article>
+              </section>
+
+              <section class="settings-section" data-settings-page="playing">
+                <article class="settings-card">
+                  <h3>Media Mini-Player</h3>
+                  <p>Configure the desktop media disk widget that appears when a video or audio is playing.</p>
+                  <label class="toggle-row">
+                    <span>Show desktop media disk</span>
+                    <input id="desktopMediaDisk" type="checkbox" />
+                  </label>
+                </article>
+              </section>
+
+              <section class="settings-section" data-settings-page="history">
+                <article class="settings-card history-settings-card">
+                  <h3>History</h3>
+                  <p class="settings-card-copy">Recently visited pages. Hover a row and click the remove button to delete a single entry.</p>
+                  <div id="historyList" class="panel-list empty-list"></div>
+                </article>
+              </section>
+
+              <section class="settings-section" data-settings-page="data">
+                <article class="settings-card">
+                  <h3>Data</h3>
+                  <button id="clearHistory">Clear history</button>
+                  <button id="clearDownloads">Clear downloads list</button>
+                  <button id="clearBookmarks">Clear bookmarks</button>
+                </article>
+              </section>
+
+              <section class="settings-section" data-settings-page="about">
+                <article class="settings-card about-card">
+                  <h3>About Faibilo</h3>
+                  <p>Faibilo is a fast desktop browser with tabs, bookmarks, history, downloads, page search, zoom shortcuts, media controls, and a clean workspace.</p>
+                  <dl class="about-meta">
+                    <div><dt>Version</dt><dd id="aboutVersion">1.0.0</dd></div>
+                    <div><dt>Developer</dt><dd>GRSNSSS (Saaketh)</dd></div>
+                    <div><dt>Publisher</dt><dd>VenoxBhs</dd></div>
+                  </dl>
+                </article>
+                <article class="settings-card about-card">
+                  <h3>Updates</h3>
+                  <p class="settings-card-copy">Check whether a newer Faibilo release is available from GitHub.</p>
+                  <p class="update-status" id="updateStatus">Check manually to look for a new version.</p>
+                  <div class="update-features-box hidden" id="settingsUpdateFeaturesBox">
+                    <div class="update-features-box-header">
+                      <span class="icon-slot" data-icon="star"></span>
+                      <span>What's new in v<span id="settingsUpdateVersion"></span></span>
+                    </div>
+                    <p class="update-features-notes hidden" id="settingsUpdateNotes"></p>
+                    <ul class="update-features-items" id="settingsUpdateFeaturesList"></ul>
+                  </div>
+                  <div class="update-actions-row">
+                    <button class="settings-action-button" id="checkUpdates" type="button">Check for updates</button>
+                    <button class="settings-action-button accent hidden" id="downloadUpdateBtn" type="button">Download &amp; install</button>
+                  </div>
+                </article>
+                <article class="settings-card about-card">
+                  <h3>Support Us</h3>
+                  <p>Join the Discord to suggest updates, request new features, and report bugs.</p>
+                  <button class="join-button" id="joinDiscord">Join Discord</button>
+                </article>
+              </section>
+            </div>
+          </section>
+        </section>
+      </main>
+
+      <div class="menu-popover hidden" id="menuPopover">
+        <button type="button" class="menu-popover-item" id="menuNewTab">
+          <span class="icon-slot" data-icon="plus"></span>
+          <span class="menu-text">New Tab</span>
+          <kbd class="shortcut">Ctrl+T</kbd>
+        </button>
+        <button type="button" class="menu-popover-item" id="menuNewWindow">
+          <span class="icon-slot" data-icon="globe"></span>
+          <span class="menu-text">New Window</span>
+          <kbd class="shortcut">Ctrl+N</kbd>
+        </button>
+        <button type="button" class="menu-popover-item" id="menuNewIncognito">
+          <span class="icon-slot" data-icon="shield-alert"></span>
+          <span class="menu-text">New Private Window</span>
+          <kbd class="shortcut">Ctrl+Shift+N</kbd>
+        </button>
+        <div class="menu-popover-separator"></div>
+        <button type="button" class="menu-popover-item" id="menuFind">
+          <span class="icon-slot" data-icon="search"></span>
+          <span class="menu-text">Find in Page</span>
+          <kbd class="shortcut">Ctrl+F</kbd>
+        </button>
+        <button type="button" class="menu-popover-item" id="menuPrint">
+          <span class="icon-slot" data-icon="printer"></span>
+          <span class="menu-text">Print Page</span>
+          <kbd class="shortcut">Ctrl+P</kbd>
+        </button>
+        <button type="button" class="menu-popover-item" id="menuSave">
+          <span class="icon-slot" data-icon="corner-down-left"></span>
+          <span class="menu-text">Save Page As...</span>
+          <kbd class="shortcut">Ctrl+S</kbd>
+        </button>
+        <div class="menu-popover-separator"></div>
+        <div class="menu-popover-item zoom-row">
+          <span class="icon-slot" data-icon="search"></span>
+          <span class="menu-text">Zoom</span>
+          <div class="zoom-controls">
+            <button type="button" id="menuZoomOut" title="Zoom out">-</button>
+            <span id="menuZoomVal">100%</span>
+            <button type="button" id="menuZoomIn" title="Zoom in">+</button>
+          </div>
+        </div>
+        <button type="button" class="menu-popover-item" id="menuFullscreen">
+          <span class="icon-slot" data-icon="square"></span>
+          <span class="menu-text">Toggle Fullscreen</span>
+          <kbd class="shortcut">F11 · Esc to exit</kbd>
+        </button>
+        <div class="menu-popover-separator"></div>
+        <button type="button" class="menu-popover-item" id="menuSettings">
+          <span class="icon-slot" data-icon="settings"></span>
+          <span class="menu-text">Settings</span>
+        </button>
+      </div>
+
+      <div class="bookmarks-popover hidden" id="bookmarksPopover">
+        <div class="popover-head">
+          <div class="popup-brand">
+            <img src="./assets/Faibilo-logo.png" alt="">
+            <strong>Bookmarks</strong>
+          </div>
+          <button class="icon-button" id="bookmarksClose" title="Close" data-icon="x"></button>
+        </div>
+        <button class="primary-row" id="bookmarkCurrent">Add current page</button>
+        <div id="bookmarksMenuList" class="panel-list empty-list"></div>
+      </div>
+
+      <div class="tabs-menu hidden" id="tabsMenu">
+        <div class="popover-head">
+          <div class="popup-brand">
+            <img src="./assets/Faibilo-logo.png" alt="">
+            <strong>Hidden tabs</strong>
+          </div>
+        </div>
+        <div id="tabsMenuList" class="panel-list"></div>
+      </div>
+
+
+
+      <div class="screenshare-backdrop hidden" id="screenshareModal">
+        <section class="screenshare-panel" role="dialog" aria-modal="true" aria-labelledby="screenshareTitle">
+          <div class="screenshare-head">
+            <div class="popup-brand">
+              <img src="./assets/Faibilo-logo.png" alt="">
+              <strong>Faibilo</strong>
+            </div>
+            <span class="permission-kicker">Screen share request</span>
+            <h2 id="screenshareTitle">Choose what to share</h2>
+            <p class="screenshare-subtitle"><strong id="screenshareOrigin">This site</strong> wants to share the contents of your screen.</p>
+          </div>
+
+          <div class="screenshare-tabs" role="tablist">
+            <button type="button" class="screenshare-tab active" id="screenshareTabScreens" role="tab" aria-selected="true">
+              <span class="tab-icon" data-icon="screen"></span>
+              <span class="tab-text">Entire Screen</span>
+              <span class="tab-badge" id="screenshareCountScreens">0</span>
+            </button>
+            <button type="button" class="screenshare-tab" id="screenshareTabWindows" role="tab" aria-selected="false">
+              <span class="tab-icon" data-icon="square"></span>
+              <span class="tab-text">Window</span>
+              <span class="tab-badge" id="screenshareCountWindows">0</span>
+            </button>
+          </div>
+
+          <div class="screenshare-body">
+            <div class="screenshare-grid" id="screenshareGrid" role="listbox" aria-label="Available screens and windows"></div>
+            <div class="screenshare-empty hidden" id="screenshareEmpty">
+              <span class="screenshare-empty-icon" data-icon="shield-alert"></span>
+              <p>No available screens or windows found.</p>
+            </div>
+          </div>
+
+          <div class="screenshare-footer">
+            <label class="screenshare-audio-toggle">
+              <input type="checkbox" id="screenshareAudioCheck" />
+              <span class="toggle-box"></span>
+              <span class="toggle-label">Share system audio</span>
+            </label>
+            <div class="screenshare-actions">
+              <button type="button" class="secondary-button" id="screenshareCancelBtn">Cancel</button>
+              <button type="button" class="primary-button" id="screenshareShareBtn" disabled>Share</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="permission-backdrop hidden" id="permissionModal">
+        <section class="permission-panel" role="dialog" aria-modal="true" aria-labelledby="permissionTitle">
+          <div class="popup-brand permission-brand">
+            <img src="./assets/Faibilo-logo.png" alt="">
+            <strong>Faibilo</strong>
+          </div>
+          <div class="permission-icon" id="permissionIcon"></div>
+          <div class="permission-copy">
+            <span class="permission-kicker">Permission request</span>
+            <h2 id="permissionTitle">Allow access?</h2>
+            <p><strong id="permissionOrigin">This site</strong> wants to access <span id="permissionLabel">this feature</span>.</p>
+          </div>
+          <div class="permission-actions">
+            <button class="permission-block" id="permissionBlock">Block</button>
+            <button class="permission-allow" id="permissionAllow">Allow</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="permission-backdrop hidden" id="appRedirectModal">
+        <section class="permission-panel app-redirect-panel" role="dialog" aria-modal="true" aria-labelledby="appRedirectTitle">
+          <div class="popup-brand permission-brand">
+            <img src="./assets/Faibilo-logo.png" alt="">
+            <strong>Faibilo</strong>
+          </div>
+          <div class="permission-icon app-redirect-icon" id="appRedirectIcon" data-icon="external-link"></div>
+          <div class="permission-copy">
+            <span class="permission-kicker">External Application</span>
+            <h2 id="appRedirectTitle">Open <span id="appRedirectAppName">Application</span>?</h2>
+            <p><strong id="appRedirectOrigin">This site</strong> wants to open the <span id="appRedirectAppHighlight">application</span> on your PC.</p>
+            <div class="app-redirect-url-box" id="appRedirectUrlBox" title="">
+              <span id="appRedirectUrlText"></span>
+            </div>
+            <label class="app-redirect-remember">
+              <input type="checkbox" id="appRedirectRememberCheck">
+              <span>Always allow this site to open this app</span>
+            </label>
+          </div>
+          <div class="permission-actions">
+            <button class="permission-block" id="appRedirectCancelBtn">Cancel</button>
+            <button class="permission-allow" id="appRedirectOpenBtn">Open App</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="modal-backdrop hidden" id="favoriteModal">
+        <section class="app-dialog" role="dialog" aria-modal="true" aria-labelledby="favoriteDialogTitle">
+          <div class="app-dialog-head">
+            <div class="app-preview branded-preview"><img src="./assets/Faibilo-logo.png" alt=""></div>
+            <div>
+              <span class="permission-kicker">App sidebar</span>
+              <h2 id="favoriteDialogTitle">Add a favorite app</h2>
+            </div>
+            <button class="icon-button" id="favoriteModalClose" title="Close" aria-label="Close" data-icon="x"></button>
+          </div>
+          <div class="favorite-site-preview">
+            <div class="app-preview" id="favoritePreview" data-icon="globe"></div>
+            <span>Website icon preview</span>
+          </div>
+          <form id="favoriteForm">
+            <label>
+              App name
+              <input id="favoriteName" maxlength="30" autocomplete="off" placeholder="Notion" required />
+            </label>
+            <label>
+              Website address
+              <input id="favoriteUrl" type="text" autocomplete="off" spellcheck="false" placeholder="https://notion.so" required />
+            </label>
+            <p class="form-error hidden" id="favoriteError">Enter a valid website address.</p>
+            <div class="app-dialog-actions">
+              <button type="button" class="secondary-button" id="favoriteCancel">Cancel</button>
+              <button type="submit" class="primary-button">Add app</button>
+            </div>
+          </form>
+          <div class="favorite-suggestions">
+            <div class="favorite-suggestions-head">
+              <span class="favorite-suggestions-title">Popular Web Apps</span>
+              <button type="button" class="btn-text-action" id="restoreDefaultAppsBtn">Restore All Defaults</button>
+            </div>
+            <div class="favorite-suggestions-grid" id="favoriteSuggestionsGrid"></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="update-toast hidden" id="updateReadyToast">
+        <div class="update-toast-main">
+          <div class="update-toast-icon">
+            <span class="icon-slot" data-icon="download"></span>
+          </div>
+          <div class="update-toast-content">
+            <div class="update-toast-title-row">
+              <strong>Update Ready to Install</strong>
+              <span class="update-toast-badge" id="updateToastBadge">v1.1.2</span>
+            </div>
+            <p class="update-toast-desc" id="updateToastDesc">A new version was downloaded in the background. Click to restart &amp; install.</p>
+          </div>
+        </div>
+        <div class="update-toast-actions">
+          <button type="button" class="primary-button btn-compact accent" id="updateToastInstallBtn">Install &amp; Restart</button>
+          <button type="button" class="secondary-button btn-compact" id="updateToastDismissBtn">Later</button>
+        </div>
+      </div>
+
+      <div class="default-browser-banner hidden" id="defaultBrowserBanner">
+        <div class="default-browser-banner-main">
+          <div class="default-browser-banner-icon">
+            <img src="./assets/Faibilo-logo.png" alt="Faibilo" />
+          </div>
+          <div class="default-browser-banner-content">
+            <strong>Make Faibilo your default browser?</strong>
+            <p>Get fast web navigation, file opening, and seamless default link handling.</p>
+          </div>
+        </div>
+        <div class="default-browser-banner-actions">
+          <button type="button" class="primary-button btn-compact" id="defaultBannerSetBtn">Set as default</button>
+          <button type="button" class="secondary-button btn-compact" id="defaultBannerNotNowBtn">Not now</button>
+          <button type="button" class="icon-button default-banner-dismiss" id="defaultBannerDismissBtn" title="Don't ask again" aria-label="Don't ask again" data-icon="x"></button>
+        </div>
+      </div>
+
+      <div class="tour-overlay hidden" id="tourOverlay">
+        <div class="tour-modal" id="tourModal" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
+          <button type="button" class="icon-button tour-close" id="tourCloseBtn" title="Close tour" aria-label="Close tour" data-icon="x"></button>
+          
+          <div class="tour-header">
+            <div class="tour-badge">
+              <span class="tour-step-tag" id="tourStepTag">Step 1 of 4 • Welcome</span>
+            </div>
+            <div class="tour-progress">
+              <div class="tour-progress-bar" id="tourProgressBar" style="width: 25%;"></div>
+            </div>
+          </div>
+
+          <div class="tour-body" id="tourBody"></div>
+
+          <div class="tour-footer">
+            <button type="button" class="tour-btn text" id="tourSkipBtn">Skip tour</button>
+            <div class="tour-dots" id="tourDots"></div>
+            <div class="tour-nav-btns">
+              <button type="button" class="tour-btn secondary" id="tourPrevBtn" disabled>Back</button>
+              <button type="button" class="tour-btn primary" id="tourNextBtn">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="./renderer.js"></script>
+  </body>
+</html>

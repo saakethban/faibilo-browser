@@ -1,0 +1,158 @@
+{
+  "name": "faibilo-browser",
+  "version": "1.1.2",
+  "description": "Faibilo - a beautiful desktop web browser by GRSNSSS (Saaketh), published by VenoxBhs.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node scripts/start-electron.js",
+    "check": "node --check src/main.js && node --check src/preload.js && node --check src/preload-webview.js && node --check src/adblocker.js && node --check src/renderer.js && node --check src/env.js && node --check src/updater.js",
+    "build": "npm run check && electron-builder --win nsis --x64",
+    "pack": "npm run check && electron-builder --dir"
+  },
+  "keywords": [
+    "browser",
+    "electron",
+    "faibilo"
+  ],
+  "author": "GRSNSSS (Saaketh)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saakethban/faibilo-browser.git"
+  },
+  "bugs": {
+    "url": "https://github.com/saakethban/faibilo-browser/issues"
+  },
+  "homepage": "https://github.com/saakethban/faibilo-browser#readme",
+  "build": {
+    "appId": "com.faibilo.browser",
+    "productName": "Faibilo",
+    "copyright": "Copyright © 2026 VenoxBhs. Developer: GRSNSSS (Saaketh).",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "scripts/**/*",
+      "package.json",
+      "!**/.faibilo-profile/**",
+      "!**/FastCache/**"
+    ],
+    "asarUnpack": [
+      "src/assets/*.mp4"
+    ],
+    "protocols": [
+      {
+        "name": "Faibilo Browser Link",
+        "schemes": [
+          "http",
+          "https"
+        ]
+      },
+      {
+        "name": "Faibilo Internal Link",
+        "schemes": [
+          "faibilo"
+        ]
+      }
+    ],
+    "fileAssociations": [
+      {
+        "ext": "html",
+        "name": "HTML Document",
+        "description": "Web Page",
+        "role": "Editor",
+        "icon": "src/assets/Faibilo-logo.ico"
+      },
+      {
+        "ext": "htm",
+        "name": "HTML Document",
+        "description": "Web Page",
+        "role": "Editor",
+        "icon": "src/assets/Faibilo-logo.ico"
+      },
+      {
+        "ext": "xhtml",
+        "name": "XHTML Document",
+        "description": "Web Page",
+        "role": "Editor",
+        "icon": "src/assets/Faibilo-logo.ico"
+      },
+      {
+        "ext": "url",
+        "name": "Internet Shortcut",
+        "description": "Web Shortcut",
+        "role": "Editor",
+        "icon": "src/assets/Faibilo-logo.ico"
+      },
+      {
+        "ext": "webloc",
+        "name": "Web Location",
+        "description": "Web Shortcut",
+        "role": "Editor",
+        "icon": "src/assets/Faibilo-logo.ico"
+      },
+      {
+        "ext": "mhtml",
+        "name": "MHTML Web Archive",
+        "description": "Web Archive",
+        "role": "Editor",
+        "icon": "src/assets/Faibilo-logo.ico"
+      },
+      {
+        "ext": "svg",
+        "name": "SVG Document",
+        "description": "Scalable Vector Graphic",
+        "role": "Editor",
+        "icon": "src/assets/Faibilo-logo.ico"
+      },
+      {
+        "ext": "pdf",
+        "name": "PDF Document",
+        "description": "Portable Document Format",
+        "role": "Editor",
+        "icon": "src/assets/Faibilo-logo.ico"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "src/assets/Faibilo-logo.ico",
+      "legalTrademarks": "Faibilo",
+      "executableName": "Faibilo",
+      "verifyUpdateCodeSignature": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "allowElevation": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Faibilo",
+      "artifactName": "${productName}Setup.${ext}",
+      "installerIcon": "src/assets/Faibilo-logo.ico",
+      "uninstallerIcon": "src/assets/Faibilo-logo.ico",
+      "installerHeaderIcon": "src/assets/Faibilo-logo.ico",
+      "uninstallDisplayName": "Faibilo",
+      "menuCategory": "Faibilo",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "include": "build/installer.nsh"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^26.15.3",
+    "png-to-ico": "^3.0.1"
+  },
+  "dependencies": {
+    "discord-rpc": "^4.0.1"
+  }
+}

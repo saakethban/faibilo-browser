@@ -1,0 +1,11 @@
+version=1.0.1
+url=https://github.com/your-username/faibilo-releases/releases/download/v1.0.1/Faibilo-Setup-1.0.1.exe
+necessary=false
+
+notes=Welcome to Faibilo v1.0.1!
+
+features:
+- Full WebRTC screen sharing support with live preview picker
+- External app redirection permission prompts (Discord, Zoom, Steam, etc.)
+- Enhanced popup and advertisement blocking
+- Performance optimizations and memory reductions

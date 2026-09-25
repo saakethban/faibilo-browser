@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Faibilo Start</title>
+    <link rel="stylesheet" href="./start.css" />
+  </head>
+  <body>
+    <div class="backdrop" aria-hidden="true"></div>
+
+    <main>
+      <div class="hero">
+        <p class="clock" id="heroClock">00:00</p>
+        <p class="date"  id="heroDate">Today</p>
+      </div>
+
+      <form id="searchForm" class="search-form">
+        <div class="search-shell">
+          <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input id="searchInput" autofocus autocomplete="off" spellcheck="false" placeholder="Search or enter an address" />
+          <button type="submit" aria-label="Go">Go</button>
+        </div>
+        <div id="startSuggestions" class="start-suggestions" style="display:none"></div>
+      </form>
+
+      <div id="privateInfoCard" class="private-card hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Private mode — history won't be saved on this device.</span>
+      </div>
+
+      <section class="links-section" id="linksSection">
+        <div class="links-header">
+          <span class="links-label">Quick links</span>
+          <button type="button" class="edit-toggle" id="editToggle" title="Edit quick links">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+        </div>
+
+        <div class="links-grid" id="quickLinks"></div>
+
+        <!-- Add link panel — shown in edit mode -->
+        <div class="add-panel hidden" id="addPanel">
+          <input id="addName" class="add-input" type="text" placeholder="Name (optional)" autocomplete="off" />
+          <input id="addUrl"  class="add-input" type="url"  placeholder="https://example.com" autocomplete="off" />
+          <button type="button" class="add-confirm" id="addConfirm">Add</button>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const SEARCH_URLS = {
+        google:     'https://www.google.com/search?q=',
+        duckduckgo: 'https://duckduckgo.com/?q=',
+        bing:       'https://www.bing.com/search?q='
+      };
+      const THEMES = {
+        forest:   { bg:'#0a100e', panel:'#121a16', text:'#f5f7f0', muted:'#a8b5ad', accent:'#83e1bd', line:'rgba(255,255,255,0.12)' },
+        midnight: { bg:'#070b16', panel:'#0e1424', text:'#f2f6ff', muted:'#93a0bc', accent:'#7aa7ff', line:'rgba(147,160,188,0.18)' },
+        carbon:   { bg:'#0c0d0f', panel:'#15171a', text:'#f5f7fa', muted:'#9aa0a8', accent:'#dadde2', line:'rgba(255,255,255,0.1)' },
+        sunrise:  { bg:'#140f0c', panel:'#1d1712', text:'#fff8ee', muted:'#c7aa93', accent:'#ffb15d', line:'rgba(255,241,230,0.14)' }
+      };
+
+      let activeSearchEngine = 'google';
+      let editMode = false;
+
+      /* ── defaults loaded from renderer via __faibiloStartApply ── */
+      let currentLinks = [
+        { id:'google',   name:'Google',   url:'https://www.google.com' },
+        { id:'youtube',  name:'YouTube',  url:'https://www.youtube.com' },
+        { id:'github',   name:'GitHub',   url:'https://github.com' },
+        { id:'spotify',  name:'Spotify',  url:'https://open.spotify.com' },
+        { id:'whatsapp', name:'WhatsApp', url:'https://web.whatsapp.com' },
+        { id:'gmail',    name:'Gmail',    url:'https://mail.google.com' },
+        { id:'reddit',   name:'Reddit',   url:'https://www.reddit.com' },
+        { id:'notion',   name:'Notion',   url:'https://www.notion.so' }
+      ];
+
+      function parseThemeColor(v) {
+        const r = String(v||'').trim();
+        if (/^#[0-9a-f]{6}$/i.test(r)) return r.toLowerCase();
+        if (/^[0-9a-f]{6}$/i.test(r)) return `#${r.toLowerCase()}`;
+        return '';
+      }
+
+      function updateClock() {
+        const now = new Date();
+        document.getElementById('heroClock').textContent = now.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+        document.getElementById('heroDate').textContent  = now.toLocaleDateString([], { weekday:'long', month:'long', day:'numeric' });
+      }
+
+      function hostnameFromUrl(url) {
+        try { return new URL(url).hostname.replace(/^www\./,''); } catch { return url; }
+      }
+      function faviconForUrl(url) {
+        try { return `${new URL(url).origin}/favicon.ico`; } catch { return './assets/Faibilo-logo.png'; }
+      }
+
+      function applyAppearance() {
+        const p = new URLSearchParams(location.search);
+        const theme     = THEMES[p.get('theme')] || THEMES.forest;
+        const accent    = parseThemeColor(p.get('accent'));
+        const component = parseThemeColor(p.get('component'));
+        const border    = parseThemeColor(p.get('border'));
+        const r = document.documentElement;
+        r.style.setProperty('--bg',           theme.bg);
+        r.style.setProperty('--panel',        theme.panel);
+        r.style.setProperty('--text',         theme.text);
+        r.style.setProperty('--muted',        theme.muted);
+        r.style.setProperty('--accent',       accent    || theme.accent);
+        r.style.setProperty('--component-bg', component || theme.panel);
+        r.style.setProperty('--line',         border    || theme.line);
+        if (p.get('incognito') === 'true') {
+          document.body.classList.add('incognito');
+          document.getElementById('privateInfoCard').classList.remove('hidden');
+          document.querySelector('#searchInput').placeholder = 'Search privately…';
+        }
+      }
+
+      function normalizeInput(value) {
+        const input = value.trim();
+        if (!input) return 'https://www.google.com';
+        if (/^[a-z][a-z0-9+.-]*:\/\//i.test(input)) return input;
+        if (/^(localhost|(\d{1,3}\.){3}\d{1,3})(:\d+)?(\/.*)?$/i.test(input)) return `http://${input}`;
+        if (/^[\w-]+(\.[\w-]+)+(:\d+)?(\/.*)?$/i.test(input)) return `https://${input}`;
+        return `${SEARCH_URLS[activeSearchEngine]||SEARCH_URLS.google}${encodeURIComponent(input)}`;
+      }
+
+      const preconnectedOrigins = new Set();
+      function preconnectUrl(url) {
+        try {
+          const origin = new URL(url).origin;
+          if (preconnectedOrigins.has(origin)) return;
+          preconnectedOrigins.add(origin);
+          const link = document.createElement('link');
+          link.rel = 'preconnect';
+          link.href = origin;
+          document.head.appendChild(link);
+          const dns = document.createElement('link');
+          dns.rel = 'dns-prefetch';
+          dns.href = origin;
+          document.head.appendChild(dns);
+        } catch {}
+      }
+
+      /* ── Render quick links grid ── */
+      function renderLinks() {
+        const grid = document.getElementById('quickLinks');
+        grid.innerHTML = '';
+
+        currentLinks.forEach((link, index) => {
+          const wrap = document.createElement('div');
+          wrap.className = 'link-wrap' + (editMode ? ' edit-mode' : '');
+          wrap.dataset.id = link.id;
+
+          const a = document.createElement('a');
+          a.className = 'link-item';
+          a.href = editMode ? '#' : link.url;
+          a.tabIndex = editMode ? -1 : 0;
+          if (editMode) {
+            a.addEventListener('click', e => e.preventDefault());
+          } else {
+            a.addEventListener('mouseenter', () => preconnectUrl(link.url));
+          }
+
+          const img = document.createElement('img');
+          img.src = faviconForUrl(link.url);
+          img.alt = '';
+          img.addEventListener('error', () => { img.src = './assets/Faibilo-logo.png'; });
+
+          const span = document.createElement('span');
+          span.textContent = link.name || hostnameFromUrl(link.url);
+
+          a.append(img, span);
+          wrap.appendChild(a);
+
+          if (editMode) {
+            // Remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'link-remove';
+            removeBtn.title = 'Remove';
+            removeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
+            removeBtn.addEventListener('click', () => removeLink(link.id));
+            wrap.appendChild(removeBtn);
+
+            // Move left/right buttons
+            if (index > 0) {
+              const moveLeft = document.createElement('button');
+              moveLeft.type = 'button';
+              moveLeft.className = 'link-move link-move-left';
+              moveLeft.title = 'Move left';
+              moveLeft.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><path d="m15 18-6-6 6-6"/></svg>`;
+              moveLeft.addEventListener('click', () => moveLink(index, -1));
+              wrap.appendChild(moveLeft);
+            }
+            if (index < currentLinks.length - 1) {
+              const moveRight = document.createElement('button');
+              moveRight.type = 'button';
+              moveRight.className = 'link-move link-move-right';
+              moveRight.title = 'Move right';
+              moveRight.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><path d="m9 18 6-6-6-6"/></svg>`;
+              moveRight.addEventListener('click', () => moveLink(index, 1));
+              wrap.appendChild(moveRight);
+            }
+          }
+
+          grid.appendChild(wrap);
+        });
+
+        // "Add" placeholder shown in edit mode
+        if (editMode) {
+          document.getElementById('addPanel').classList.remove('hidden');
+        } else {
+          document.getElementById('addPanel').classList.add('hidden');
+        }
+      }
+
+      function saveLinks() {
+        window.__pendingQuickLinksUpdate = currentLinks.map(l => ({ id: l.id, name: l.name, url: l.url }));
+      }
+
+      function removeLink(id) {
+        currentLinks = currentLinks.filter(l => l.id !== id);
+        renderLinks();
+        saveLinks();
+      }
+
+      function moveLink(index, dir) {
+        const newIndex = index + dir;
+        if (newIndex < 0 || newIndex >= currentLinks.length) return;
+        const copy = [...currentLinks];
+        [copy[index], copy[newIndex]] = [copy[newIndex], copy[index]];
+        currentLinks = copy;
+        renderLinks();
+        saveLinks();
+      }
+
+      function addLink(name, url) {
+        if (!url) return;
+        const normalUrl = normalizeInput(url);
+        const id = `ql-${Date.now()}`;
+        const displayName = name.trim() || hostnameFromUrl(normalUrl);
+        currentLinks.push({ id, name: displayName, url: normalUrl });
+        renderLinks();
+        saveLinks();
+      }
+
+      /* ── Edit toggle ── */
+      document.getElementById('editToggle').addEventListener('click', () => {
+        editMode = !editMode;
+        const btn = document.getElementById('editToggle');
+        btn.classList.toggle('active', editMode);
+        btn.innerHTML = editMode
+          ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M20 6 9 17l-5-5"/></svg> Done`
+          : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit`;
+        renderLinks();
+      });
+
+      /* ── Add confirm ── */
+      document.getElementById('addConfirm').addEventListener('click', () => {
+        const name = document.getElementById('addName').value.trim();
+        const url  = document.getElementById('addUrl').value.trim();
+        if (!url) { document.getElementById('addUrl').focus(); return; }
+        addLink(name, url);
+        document.getElementById('addName').value = '';
+        document.getElementById('addUrl').value  = '';
+        document.getElementById('addName').focus();
+      });
+
+      document.getElementById('addUrl').addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('addConfirm').click(); }
+      });
+
+      /* ── Predictive Hover Preconnect ── */
+      document.getElementById('quickLinks').addEventListener('mouseover', (e) => {
+        const a = e.target.closest ? e.target.closest('a.link-item') : null;
+        if (!a || !a.href || a.href.startsWith('javascript:') || a.href.includes('#')) return;
+        try {
+          const origin = new URL(a.href).origin;
+          if (!document.querySelector(`link[rel="preconnect"][href^="${origin}"]`)) {
+            const link = document.createElement('link');
+            link.rel = 'preconnect';
+            link.href = origin;
+            document.head.appendChild(link);
+          }
+        } catch {}
+      }, { passive: true });
+
+      /* ── Data from renderer ── */
+      window.__faibiloStartApply = function(data) {
+        if (!data || typeof data !== 'object') return;
+        activeSearchEngine = data.searchEngine || 'google';
+
+        if (Array.isArray(data.quickLinks) && data.quickLinks.length > 0) {
+          currentLinks = data.quickLinks;
+        }
+
+        startHistory = (Array.isArray(data.history) ? data.history : []).filter(h => h?.url);
+        renderLinks();
+      };
+
+      /* ── Search form ── */
+      document.querySelector('#searchForm').addEventListener('submit', e => {
+        e.preventDefault();
+        closeSuggestions();
+        location.href = normalizeInput(document.querySelector('#searchInput').value);
+      });
+
+      /* ── Search suggestions ── */
+      let startHistory = [];
+      let startSuggestIndex = -1;
+      let startSuggestItems = [];
+      let startDebounce = null;
+      const suggestionsEl = document.getElementById('startSuggestions');
+      const searchInput   = document.querySelector('#searchInput');
+
+      document.body.appendChild(suggestionsEl);
+      suggestionsEl.style.display = '';
+
+      function positionSuggestions() {
+        const r = document.querySelector('.search-shell').getBoundingClientRect();
+        suggestionsEl.style.top   = `${r.bottom + 6}px`;
+        suggestionsEl.style.left  = `${r.left}px`;
+        suggestionsEl.style.width = `${r.width}px`;
+      }
+
+      function buildSuggestions(query) {
+        const q = (query||'').trim().toLowerCase();
+        const out = [];
+        if (!q) {
+          const r = startHistory.slice(0,5);
+          if (r.length) { out.push({type:'label',text:'Recent'}); r.forEach(h => out.push({type:'history',title:h.title,url:h.url})); }
+          return out;
+        }
+        const hm = startHistory.filter(h => h.url?.toLowerCase().includes(q)||h.title?.toLowerCase().includes(q)).slice(0,5);
+        if (hm.length) { out.push({type:'label',text:'History'}); hm.forEach(h => out.push({type:'history',title:h.title,url:h.url,query:query.trim()})); }
+        const isUrl = /^[a-z][a-z0-9+.-]*:\/\//i.test(q)||/^[\w-]+(\.[\w-]+)+/i.test(q);
+        if (!isUrl) {
+          if (!out.length) out.push({type:'label',text:'Search'});
+          out.push({type:'search',title:query.trim(),query:query.trim()});
+          let n=0;
+          for (const s of ['how to','what is','best','vs','tutorial']) {
+            if (n>=2) break;
+            if (!q.includes(s)) { out.push({type:'search',title:`${query.trim()} ${s}`,query:`${query.trim()} ${s}`}); n++; }
+          }
+        }
+        return out;
+      }
+
+      function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      function hi(text, query) {
+        if (!query) return esc(text);
+        const i = text.toLowerCase().indexOf(query.toLowerCase());
+        if (i<0) return esc(text);
+        return `${esc(text.slice(0,i))}<mark>${esc(text.slice(i,i+query.length))}</mark>${esc(text.slice(i+query.length))}`;
+      }
+
+      function renderSuggestions(items) {
+        suggestionsEl.innerHTML = '';
+        startSuggestItems = [];
+        startSuggestIndex = -1;
+        if (!items.length) return;
+        positionSuggestions();
+        items.forEach(item => {
+          if (item.type === 'label') {
+            const d = document.createElement('div');
+            d.className = 'start-sugg-label';
+            d.textContent = item.text;
+            suggestionsEl.appendChild(d);
+            return;
+          }
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'start-sugg-item';
+          const ico = item.type==='history'
+            ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`
+            : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`;
+          const t = item.type==='search' ? item.title : (item.title||item.url);
+          const sub = item.url ? `<span class="start-sugg-url">${esc(item.url)}</span>` : '';
+          btn.innerHTML = `<span class="start-sugg-icon">${ico}</span><span class="start-sugg-text"><span class="start-sugg-title">${hi(t,item.query||'')}</span>${sub}</span>`;
+          btn.addEventListener('mousedown', e => {
+            e.preventDefault();
+            closeSuggestions();
+            location.href = item.type==='search'
+              ? `${SEARCH_URLS[activeSearchEngine]||SEARCH_URLS.google}${encodeURIComponent(item.query)}`
+              : item.url;
+          });
+          suggestionsEl.appendChild(btn);
+          startSuggestItems.push(btn);
+        });
+      }
+
+      function updateSuggestions() {
+        clearTimeout(startDebounce);
+        startDebounce = setTimeout(() => renderSuggestions(buildSuggestions(searchInput.value)), 60);
+      }
+      function closeSuggestions() {
+        suggestionsEl.innerHTML = '';
+        startSuggestItems = [];
+        startSuggestIndex = -1;
+      }
+
+      searchInput.addEventListener('focus', updateSuggestions);
+      searchInput.addEventListener('input', updateSuggestions);
+      searchInput.addEventListener('blur', () => setTimeout(closeSuggestions, 160));
+      window.addEventListener('scroll', () => { if (suggestionsEl.children.length) positionSuggestions(); }, { passive:true });
+      searchInput.addEventListener('keydown', e => {
+        const c = startSuggestItems.length;
+        if (!c) return;
+        if (e.key==='ArrowDown') { e.preventDefault(); startSuggestIndex=(startSuggestIndex+1)%c; startSuggestItems.forEach((el,i)=>el.classList.toggle('active',i===startSuggestIndex)); }
+        else if (e.key==='ArrowUp') { e.preventDefault(); startSuggestIndex=(startSuggestIndex-1+c)%c; startSuggestItems.forEach((el,i)=>el.classList.toggle('active',i===startSuggestIndex)); }
+        else if (e.key==='Escape') closeSuggestions();
+        else if ((e.key==='Tab'||e.key==='Enter') && startSuggestIndex>=0) { e.preventDefault(); startSuggestItems[startSuggestIndex]?.dispatchEvent(new MouseEvent('mousedown',{bubbles:true})); }
+      });
+
+      applyAppearance();
+      updateClock();
+      setInterval(updateClock, 30000);
+      renderLinks();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+version=1.0.1
+url=https://github.com/your-username/faibilo-releases/releases/download/v1.0.1/Faibilo-Setup-1.0.1.exe
+necessary=false
+
+# Optional release notes / overview:
+notes=Exciting new features and system improvements in this update!
+
+# Features list (shown with glowing bullets in update available screen):
+features:
+- Full WebRTC screen sharing support with live display and window picker
+- External app redirection permission controls (Discord, Zoom, Spotify, Steam, etc.)
+- Enhanced popup and advertisement blocking
+- Performance optimizations and memory reductions
+
+# --- Alternative formats also supported ---
+# Single-line comma separated:
+# features=Screen sharing support, External app redirection, Adblock speedups
+#
+# Multiple feature lines:
+# feature=Screen sharing support
+# feature=External app redirection
+#
+# Simple two-line format:
+# 1.0.1
+# https://github.com/your-username/faibilo-releases/releases/download/v1.0.1/Faibilo-Setup.exe
