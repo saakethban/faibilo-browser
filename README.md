@@ -1,6 +1,7 @@
 # Faibilo Browser 🌐⚡
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Privacy: Zero--Telemetry](https://img.shields.io/badge/Privacy-Zero--Telemetry-brightgreen.svg)](PRIVACY.md)
 [![Electron](https://img.shields.io/badge/Electron-33.x-47848F?logo=electron&logoColor=white)](https://electronjs.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white)](#)
 
@@ -30,6 +31,7 @@ For detailed architectural diagrams, file-by-file explanations, and subsystem br
 - 📐 **[System Architecture & Design (docs/ARCHITECTURE.md)](docs/ARCHITECTURE.md)**: Multi-process model, context isolation, memory lifecycle, WebRTC pipeline, and complete IPC channel table.
 - 🔍 **[Component-by-Component Breakdown (docs/COMPONENTS.md)](docs/COMPONENTS.md)**: Comprehensive guide detailing every file, class, and function across Main, Preload, and Renderer.
 - 🚀 **[Deep Dive Features Guide (docs/FEATURES.md)](docs/FEATURES.md)**: Detailed explanations of Adblocking, Incognito ephemeral storage, Screen Sharing picker, Protocol Security, and Discord RPC.
+- 🛡️ **[Privacy Policy (PRIVACY.md)](PRIVACY.md)**: Zero telemetry, local storage details, and privacy commitments.
 
 ---
 
