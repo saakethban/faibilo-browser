@@ -1,6 +1,7 @@
 # Faibilo Browser 🌐⚡
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Build & Release](https://github.com/saakethban/faibilo-browser/actions/workflows/build.yml/badge.svg)](https://github.com/saakethban/faibilo-browser/actions/workflows/build.yml)
 [![Privacy: Zero--Telemetry](https://img.shields.io/badge/Privacy-Zero--Telemetry-brightgreen.svg)](PRIVACY.md)
 [![Electron](https://img.shields.io/badge/Electron-33.x-47848F?logo=electron&logoColor=white)](https://electronjs.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white)](#)
